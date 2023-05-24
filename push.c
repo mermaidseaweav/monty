@@ -1,37 +1,112 @@
 #include "monty.h"
-/**
- * f_push - add node to the stack
- * @head: stack head
- * @counter: line_number
- * Return: no return
-*/
-void f_push(stack_t **head, unsigned int counter)
-{
-	int n, j = 0, flag = 0;
 
-	if (bus.arg)
+/**
+ * _push -  pushes an element to the stack.
+ * @stack: double pointer to header (top) of the stack.
+ * @line_number: counter for line number of the file.
+ *
+ * Return: void.
+ */
+void _push(stack_t **stack, unsigned int line_number)
+{
+	size_t len = 0, i = 0;
+	char arg[128] = "";
+	char *argument = arg;
+
+	argument = strtok(NULL, " \t\r\n\v\f");
+
+	if (argument == NULL)
 	{
-		if (bus.arg[0] == '-')
-			j++;
-		for (; bus.arg[j] != '\0'; j++)
+		dprintf(STDERR_FILENO, "L%u: usage: push integer\n", line_number);
+		free_stack_t(*stack);
+
+		exit(EXIT_FAILURE);
+	}
+
+	len = strlen(argument);
+	for (i = 0; i < len; i++)
+		if (!isdigit(argument[i]) && argument[0] != '-')
 		{
-			if (bus.arg[j] > 57 || bus.arg[j] < 48)
-				flag = 1; }
-		if (flag == 1)
-		{ fprintf(stderr, "L%d: usage: push integer\n", counter);
-			fclose(bus.file);
-			free(bus.content);
-			free_stack(*head);
-			exit(EXIT_FAILURE); }}
+			dprintf(STDERR_FILENO, "L%u: usage: push integer\n", line_number);
+			free_stack_t(*stack);
+
+			exit(EXIT_FAILURE);
+		}
+
+	if (stack_queue == 's')
+		add_node(stack, atoi(argument));
+
+	if (stack_queue == 'q')
+		add_node_queue(stack, atoi(argument));
+}
+
+/**
+ * add_node -  pushes an element to the stack.
+ * @stack: double pointer to header (top) of the stack.
+ * @argument: integer push.
+ *
+ * Return: void.
+ */
+void add_node(stack_t **stack, int argument)
+{
+	stack_t *new_node = NULL;
+
+	new_node = malloc(sizeof(stack_t));
+	if (new_node == NULL)
+	{
+		dprintf(STDERR_FILENO, "Error: malloc failed\n");
+		free_stack_t(*stack);
+
+		exit(EXIT_FAILURE);
+	}
+
+	new_node->n = argument;
+	new_node->prev = NULL;
+	new_node->next = NULL;
+
+	if (*stack == NULL)
+		*stack = new_node;
 	else
-	{ fprintf(stderr, "L%d: usage: push integer\n", counter);
-		fclose(bus.file);
-		free(bus.content);
-		free_stack(*head);
-		exit(EXIT_FAILURE); }
-	n = atoi(bus.arg);
-	if (bus.lifi == 0)
-		addnode(head, n);
+	{
+		new_node->next = *stack;
+		(*stack)->prev = new_node;
+		*stack = new_node;
+	}
+}
+
+/**
+ * add_node_queue -  pushes an element to the stack.
+ * @stack: double pointer to header (top) of the stack.
+ * @argument: integer push.
+ *
+ * Return: void.
+ */
+void add_node_queue(stack_t **stack, int argument)
+{
+	stack_t *new_node = NULL, *last = NULL;
+
+	new_node = malloc(sizeof(stack_t));
+	if (new_node == NULL)
+	{
+		dprintf(STDERR_FILENO, "Error: malloc failed\n");
+		free_stack_t(*stack);
+
+		exit(EXIT_FAILURE);
+	}
+
+	new_node->n = argument;
+	new_node->prev = NULL;
+	new_node->next = NULL;
+
+	if (*stack == NULL)
+		*stack = new_node;
 	else
-		addqueue(head, n);
+	{
+		last = *stack;
+		while (last->next != NULL)
+			last = last->next;
+		new_node->next = NULL;
+		new_node->prev = last;
+		last->next = new_node;
+	}
 }
